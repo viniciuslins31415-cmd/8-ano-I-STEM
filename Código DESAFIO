@@ -1,0 +1,55 @@
+#include <AFMotor_R4.h>
+#include <IRremote.h>
+
+AF_DCMotor bomba(3);
+
+int receptor = 14;
+int led = 7;
+int buzzer = 8;
+
+void setup() {
+  Serial.begin(9600);
+
+  IrReceiver.begin(receptor, ENABLE_LED_FEEDBACK);
+
+  bomba.setSpeed(255);
+
+  pinMode(led, OUTPUT);
+  pinMode(buzzer, OUTPUT);
+}
+
+void loop() {
+
+  if (IrReceiver.decode()) {
+
+    unsigned long codigo = IrReceiver.decodedIRData.decodedRawData;
+
+    Serial.println(codigo, HEX);
+
+    // Parar
+    if (codigo == 0xBA45FF00) {
+      bomba.run(RELEASE);
+
+      digitalWrite(led, LOW);
+      noTone(buzzer);
+    }
+
+    // Ligar para frente
+    if (codigo == 0xB946FF00) {
+      bomba.run(FORWARD);
+
+      digitalWrite(led, HIGH);
+      tone(buzzer, 1000); // 1000 Hz
+    }
+
+    // Ligar para trás
+    if (codigo == 0xB847FF00) {
+      bomba.run(BACKWARD);
+
+      digitalWrite(led, HIGH);
+      tone(buzzer, 2000); // 2000 Hz
+    }
+
+    IrReceiver.resume();
+  }
+}
